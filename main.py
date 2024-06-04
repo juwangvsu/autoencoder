@@ -115,7 +115,7 @@ def create_model(args):
 
 # Define transform
 transform = transforms.Compose([
-    transforms.Resize((64, 64)),
+    transforms.Resize((128, 128)),
     transforms.ToTensor(),
 ])
 
@@ -173,12 +173,15 @@ def train(args, train_loader):
             optimizer.zero_grad()
             #print('train img shape,  ', img.shape)
             output = model(img)
-#            print('train img shape, output shape ', img.shape, output.shape)
+            #print('train img shape, output shape ', img.shape, output.shape)
             loss = criterion(output, img)
             loss.backward()
             optimizer.step()
         if epoch % 5== 0:
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
+        if (epoch %5 ==0) and (epoch >10):
+            print('save model param')
+            torch.save(model.state_dict(), 'conv_autoencoder.pth')
         #lr_scheduler.step(loss)
         #print('curr lr ', optimizer.state_dict()['param_groups'][0]['lr'])
 
@@ -201,10 +204,11 @@ def eval(args, test_loader):
                     print('FC input shape ', data.shape)
             recon = model(data)
             break
+    #print('sample output vs input ', data[0,0,:8,:8], recon[0,0,:8,:8])
         
     import matplotlib.pyplot as plt
     plt.figure(dpi=250)
-    fig, ax = plt.subplots(2, 7, figsize=(15, 4))
+    fig, ax = plt.subplots(2, 7, figsize=(30, 8))
     for i in range(7):
         if args.arch=='FC':
             if args.cnum==1:
