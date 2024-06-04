@@ -156,11 +156,11 @@ def train(args, train_loader):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", patience=2, factor=0.5
+        optimizer, mode="min", patience=12, factor=0.5, min_lr=1e-5
         )
 
 # Train the autoencoder
-    num_epochs = 300
+    num_epochs = 400
     for epoch in range(num_epochs):
         for data in train_loader:
             img, _ = data
@@ -179,7 +179,8 @@ def train(args, train_loader):
             optimizer.step()
         if epoch % 5== 0:
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
-        lr_scheduler.step(loss)
+        #lr_scheduler.step(loss)
+        #print('curr lr ', optimizer.state_dict()['param_groups'][0]['lr'])
 
 # Save the model
     torch.save(model.state_dict(), 'conv_autoencoder.pth')
