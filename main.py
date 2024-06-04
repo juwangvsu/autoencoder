@@ -30,6 +30,33 @@ class AutoencoderFC(nn.Module):
         x = self.encoder(x)
         x = self.decoder(x)
         return x
+class AutoencoderFC2(nn.Module):
+    def __init__(self, x_dim, h_dim1, h_dim2):
+        super(AutoencoderFC2, self).__init__()
+        # encoder part
+        self.fc1 = nn.Linear(x_dim, h_dim1)
+        self.fc2 = nn.Linear(h_dim1, h_dim2)
+        # decoder part
+        self.fc3 = nn.Linear(h_dim2, h_dim1)
+        self.fc4 = nn.Linear(h_dim1, x_dim)
+
+    def encoder(self, x):
+        #print('autoencoderfc x.shape ', x.shape)
+        x=torch.nn.functional.relu(self.fc1(x))
+        #x = torch.sigmoid(self.fc1(x))
+        x = torch.sigmoid(self.fc2(x))
+        return x
+
+    def decoder(self, x):
+        x=torch.nn.functional.relu(self.fc3(x))
+        #x = torch.sigmoid(self.fc3(x))
+        x = torch.sigmoid(self.fc4(x))
+        return x
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
 
 # Define the autoencoder architecture
 class Autoencoder(nn.Module):
@@ -80,7 +107,7 @@ def create_model(args):
     if args.arch=='Conv':
         model = Autoencoder()
     elif args.arch=='FC':
-        model = AutoencoderFC(num_input, num_hidden_1, num_hidden_2)
+        model = AutoencoderFC2(num_input, num_hidden_1, num_hidden_2)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
@@ -128,6 +155,9 @@ def train(args, train_loader):
 # Define the loss function and optimizer
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", patience=2, factor=0.5
+        )
 
 # Train the autoencoder
     num_epochs = 300
@@ -149,6 +179,7 @@ def train(args, train_loader):
             optimizer.step()
         if epoch % 5== 0:
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
+        lr_scheduler.step(loss)
 
 # Save the model
     torch.save(model.state_dict(), 'conv_autoencoder.pth')
