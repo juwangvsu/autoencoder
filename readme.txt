@@ -4,6 +4,9 @@ FC2								0.0089		conv_autoencoder_fc2_flower_1024_512.pth
 Conv		(3,32) (32,16)  50		flower		0.0061	16,16,16
 				121				0.0045
 						fl128		0.0023 good 16, 32, 32
+						amazon128	0.0014 good 16, 32, 32 conv_autoencoder_conv_amazon_32_16.pth
+						image resolution prop to the resolution of the output of encoder
+							
 		(3,32)(32,16) no maxpool	flower		0.0012	16,32,32 near perfect
 			
 					after 50 epochs, little improv

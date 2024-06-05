@@ -78,16 +78,17 @@ class Office31(data.Dataset):
         """
         path = os.path.join(self.root, self.dirname, self.domain, self.data[index])
         img = None
-        img = read_image(path)
-        '''
+        #img = read_image(path)
+        
         with open(path, "rb") as f:
             with Image.open(f) as imgf:
                 img = imgf.convert("RGB")
-        '''
+        
         label = self.targets[index]
         if self.transform is not None:
             img = self.transform(img)
         label = torch.LongTensor([np.int64(label).item()])
+        
         # label = torch.FloatTensor([label.item()])
         return img, label
 

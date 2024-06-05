@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+import dataset_office31
+
 import argparse
 model=None
 class AutoencoderFC(nn.Module):
@@ -120,6 +122,16 @@ transform = transforms.Compose([
 ])
 
 # Load dataset
+train_dataset_am = dataset_office31.Office31(root='/media/student/isaacsim/office31', train=True, download=True, domain='amazon', transform=transform)
+test_dataset_am = dataset_office31.Office31(root='/media/student/isaacsim/office31', train=False, download=True, domain='amazon', transform=transform)
+# Define the dataloader
+train_loader_am = torch.utils.data.DataLoader(dataset=train_dataset_am, 
+                                        batch_size=128, 
+                                        shuffle=True)
+test_loader_am = torch.utils.data.DataLoader(dataset=test_dataset_am, 
+                                        batch_size=128, shuffle=True)
+
+# Load dataset
 train_dataset_fl = datasets.Flowers102(root='flowers', 
                                     split='train', 
                                     transform=transform, 
@@ -179,7 +191,7 @@ def train(args, train_loader):
             optimizer.step()
         if epoch % 5== 0:
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
-        if (epoch %5 ==0) and (epoch >10):
+        if (epoch %5 ==0) and (epoch >10) or True:
             print('save model param')
             torch.save(model.state_dict(), 'conv_autoencoder.pth')
         #lr_scheduler.step(loss)
@@ -208,7 +220,7 @@ def eval(args, test_loader):
         
     import matplotlib.pyplot as plt
     plt.figure(dpi=250)
-    fig, ax = plt.subplots(2, 7, figsize=(30, 8))
+    fig, ax = plt.subplots(2, 7, figsize=(15, 4))
     for i in range(7):
         if args.arch=='FC':
             if args.cnum==1:
@@ -240,11 +252,15 @@ if __name__ == "__main__":
     if args.mode=="train":
         if args.dataset=='flower':
             train(args, train_loader_fl)
+        elif args.dataset=='amazon':
+            train(args, train_loader_am)
         else:
             train(args, train_loader_mn)
     else:
         if args.dataset=='flower':
             eval(args, test_loader_fl)
+        elif args.dataset=='amazon':
+            eval(args, train_loader_am)
         else:
             eval(args, test_loader_mn)
 
