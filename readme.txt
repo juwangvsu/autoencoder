@@ -26,3 +26,7 @@ train:
 	python3 main.py --mode train --arch Conv --dataset flower --imwidth 64 --cnum 3
 	python3 main.py --mode eval --arch FC --dataset flower --imwidth 64 --cnum 3
 
+-----------------------6/4/24 add office31 dataset code-----
+dataset_office31.py
+test_officedataset.py
+
