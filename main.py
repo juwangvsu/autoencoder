@@ -121,46 +121,50 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-# Load dataset
-train_dataset_am = dataset_office31.Office31(root='/media/student/isaacsim/office31', train=True, download=True, domain='amazon', transform=transform)
-test_dataset_am = dataset_office31.Office31(root='/media/student/isaacsim/office31', train=False, download=True, domain='amazon', transform=transform)
-# Define the dataloader
-train_loader_am = torch.utils.data.DataLoader(dataset=train_dataset_am, 
+def create_dataloader(args):
+    batchSize=128
+# Load dataset office31 amazon
+    office31root = args.dsroot #/media/student/isaacsim/office32
+    train_dataset_am = dataset_office31.Office31(root=office31root, train=True, download=True, domain='amazon', transform=transform)
+    test_dataset_am = dataset_office31.Office31(root=office31root, train=False, download=True, domain='amazon', transform=transform)
+    train_loader_am = torch.utils.data.DataLoader(dataset=train_dataset_am, 
                                         batch_size=128, 
                                         shuffle=True)
-test_loader_am = torch.utils.data.DataLoader(dataset=test_dataset_am, 
+    test_loader_am = torch.utils.data.DataLoader(dataset=test_dataset_am, 
                                         batch_size=128, shuffle=True)
 
-# Load dataset
-train_dataset_fl = datasets.Flowers102(root='flowers', 
+# Load dataseta flowers
+    train_dataset_fl = datasets.Flowers102(root='flowers', 
                                     split='train', 
                                     transform=transform, 
                                     download=True)
-test_dataset_fl = datasets.Flowers102(root='flowers', 
+    test_dataset_fl = datasets.Flowers102(root='flowers', 
                                 split='test', 
                                 transform=transform)
-# Define the dataloader
-train_loader_fl = torch.utils.data.DataLoader(dataset=train_dataset_fl, 
+    train_loader_fl = torch.utils.data.DataLoader(dataset=train_dataset_fl, 
                                         batch_size=128, 
                                         shuffle=True)
-test_loader_fl = torch.utils.data.DataLoader(dataset=test_dataset_fl, 
+    test_loader_fl = torch.utils.data.DataLoader(dataset=test_dataset_fl, 
                                         batch_size=128, shuffle=True)
+# Load dataseta mnist 
+    train_dataset_mn = datasets.MNIST(root='./mnist_data/', train=True, transform=transforms.ToTensor(), download=True)
+    test_dataset_mn = datasets.MNIST(root='./mnist_data/', train=False, transform=transforms.ToTensor(), download=True)
+    train_loader_mn = torch.utils.data.DataLoader(dataset=train_dataset_mn, batch_size=batchSize, shuffle=True)
+    test_loader_mn = torch.utils.data.DataLoader(dataset=test_dataset_mn, batch_size=batchSize, shuffle=True)
 
-train_dataset_mn = datasets.MNIST(root='./mnist_data/', train=True, transform=transforms.ToTensor(), download=True)
-test_dataset_mn = datasets.MNIST(root='./mnist_data/', train=False, transform=transforms.ToTensor(), download=True)
+    print(train_dataset_mn)
+    if args.dataset=='flower':
+        train_loader=train_loader_fl
+        test_loader=test_loader_fl
+    elif args.dataset=='amazon':
+        train_loader= train_loader_am
+        test_loader=test_loader_am
+    else:
+        train_loader, train_loader_mn
+        test_loader=test_loader_am
 
-print(train_dataset_mn)
+    return train_loader, test_loader
 
-batchSize=128
-
-#only after packed in DataLoader, can we feed the data into the neural network iteratively
-train_loader_mn = torch.utils.data.DataLoader(dataset=train_dataset_mn, batch_size=batchSize, shuffle=True)
-test_loader_mn = torch.utils.data.DataLoader(dataset=test_dataset_mn, batch_size=batchSize, shuffle=True)
-
-# Move the model to GPU
-#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#print(device)
-#model.to(device)
 
 def train(args, train_loader):
     global model
@@ -191,7 +195,7 @@ def train(args, train_loader):
             optimizer.step()
         if epoch % 5== 0:
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
-        if (epoch %5 ==0) and (epoch >10) or True:
+        if (epoch %5 ==0) and (epoch >10):
             print('save model param')
             torch.save(model.state_dict(), 'conv_autoencoder.pth')
         #lr_scheduler.step(loss)
@@ -200,7 +204,7 @@ def train(args, train_loader):
 # Save the model
     torch.save(model.state_dict(), 'conv_autoencoder.pth')
 
-def eval(args, test_loader):
+def evaluate(args, test_loader):
     global model, device
     model_path=args.paramfn
     model.load_state_dict(torch.load(model_path, device))
@@ -244,23 +248,15 @@ if __name__ == "__main__":
     parser.add_argument("--imwidth", type=int, default=28, help="image width 28 for mnist, 64 for flower")
     parser.add_argument("--cnum", type=int, default=1, help="image channel numb")
     parser.add_argument("--dataset", type=str, default="flower", help="flower, mnist etc")
+    parser.add_argument("--dsroot", type=str, default="/data/office31_new", help="flower, mnist etc")
     parser.add_argument('-l', '--loadweight', action='store_true', help="load weight file? use --paramfn if file name not best.pt ")
     parser.add_argument("--paramfn", type=str, default="conv_autoencoder.pth", help="Directory with saved data")
 
     args = parser.parse_args()
     create_model(args)
+    train_loader, test_loader = create_dataloader(args) #this handle the dataset name and return the correct loader
     if args.mode=="train":
-        if args.dataset=='flower':
-            train(args, train_loader_fl)
-        elif args.dataset=='amazon':
-            train(args, train_loader_am)
-        else:
-            train(args, train_loader_mn)
+        train(args, train_loader)
     else:
-        if args.dataset=='flower':
-            eval(args, test_loader_fl)
-        elif args.dataset=='amazon':
-            eval(args, train_loader_am)
-        else:
-            eval(args, test_loader_mn)
+        evaluate(args, test_loader)
 

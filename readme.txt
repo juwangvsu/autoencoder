@@ -1,3 +1,18 @@
+
+-----------------------------------------
+train:
+	python3 main.py --mode train --arch Conv --dataset amazon --imwidth 64 --cnum 3 --dsroot /data/office31
+	python3 main.py --mode train --arch FC --dataset flower --imwidth 64 --cnum 3
+	python3 main.py --mode train --arch Conv --dataset flower --imwidth 64 --cnum 3
+	python3 main.py --mode eval --arch FC --dataset flower --imwidth 64 --cnum 3
+eval:
+	python3 main.py --mode eval --arch Conv --dataset amazon --imwidth 64 --cnum 3 -paramfn conv_autoencoder_conv_amazon_32_16.pth
+
+-----------------------6/4/24 add office31 dataset code-----
+dataset_office31.py
+test_officedataset.py
+
+--------------------------------------- exp results and notes ----------------------------------------------
 Network		param		epoch		dataset		loss	output
 FC		1024, 512	300		flower		0.0148		conv_autoencoder_fc_flower_1024_512.pth
 FC2								0.0089		conv_autoencoder_fc2_flower_1024_512.pth	
@@ -24,12 +39,4 @@ Conv:
 
 
 -----------------------------------------
-train:
-	python3 main.py --mode train --arch FC --dataset flower --imwidth 64 --cnum 3
-	python3 main.py --mode train --arch Conv --dataset flower --imwidth 64 --cnum 3
-	python3 main.py --mode eval --arch FC --dataset flower --imwidth 64 --cnum 3
-
------------------------6/4/24 add office31 dataset code-----
-dataset_office31.py
-test_officedataset.py
 

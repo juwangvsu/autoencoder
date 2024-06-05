@@ -21,7 +21,7 @@ import torch
 import torch.utils.data as data
 from torchvision.io import read_image
 from sklearn import preprocessing
-
+import gdown
 
 class Office31(data.Dataset):
     """Office31 Domain Adaptation Dataset from the
@@ -106,6 +106,9 @@ class Office31(data.Dataset):
         dirname = os.path.join(self.root, self.dirname)
         if not os.path.exists(filename):
             logging.info("Downloading " + self.url)
+            output = '20150428_collected_images.tgz'
+            gdown.download(self.url, filename, quiet=False)
+            """
             with requests.Session() as session:
                 resp = session.head(self.url)
                 confirm = None
@@ -117,7 +120,8 @@ class Office31(data.Dataset):
                     raise RuntimeError("Could not find 'download_warning' in cookies")
                 resp = session.get(f"{self.url}&confirm={urllib.parse.quote(confirm)}")
                 with open(filename, "wb") as f:
-                    f.write(resp.content)
+                    f.write(resp.content)a
+            """
             os.makedirs(dirname, exist_ok=True)
             logging.info("Extracting files to " + dirname)
             with tarfile.open(filename, "r:gz") as tar:
