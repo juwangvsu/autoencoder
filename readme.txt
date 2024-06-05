@@ -1,5 +1,11 @@
 
------------------------------------------
+-----------------------6/5/24 add Encoder Decoder and Classifier seperately----
+	the subnet parameter will be saved in seperate files for ClassifierNet
+	hence redefining the network
+	python3 main.py --mode train --arch AE2 --dataset amazon --imwidth 64 --cnum 3 --dsroot /data/office31_new
+	python3 main.py --mode eval --arch AE2 --dataset amazon --imwidth 64 --cnum 3 --paramfn autoencodernetconv_autoencoder.pth.pth
+
+-----------------------6/4/24 -----------------
 train:
 	python3 main.py --mode train --arch Conv --dataset amazon --imwidth 64 --cnum 3 --dsroot /data/office31
 	python3 main.py --mode train --arch FC --dataset flower --imwidth 64 --cnum 3

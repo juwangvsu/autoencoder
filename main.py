@@ -5,6 +5,8 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import dataset_office31
 
+from en_de_cl import AutoencoderNet, Encoder, Decoder, ClassifyNet, Classifier
+
 import argparse
 model=None
 class AutoencoderFC(nn.Module):
@@ -32,6 +34,9 @@ class AutoencoderFC(nn.Module):
         x = self.encoder(x)
         x = self.decoder(x)
         return x
+    def save_model(self, fn):
+        torch.save(model.state_dict(), fn)# 'conv_autoencoder.pth')
+
 class AutoencoderFC2(nn.Module):
     def __init__(self, x_dim, h_dim1, h_dim2):
         super(AutoencoderFC2, self).__init__()
@@ -59,6 +64,9 @@ class AutoencoderFC2(nn.Module):
         x = self.encoder(x)
         x = self.decoder(x)
         return x
+
+    def save_model(self, fn):
+        torch.save(model.state_dict(), fn)# 'conv_autoencoder.pth')
 
 # Define the autoencoder architecture
 class Autoencoder(nn.Module):
@@ -96,6 +104,9 @@ class Autoencoder(nn.Module):
             print('encoder output shape ', x.shape)
         x = self.decoder(x)
         return x
+    def save_model(self, fn):
+        torch.save(model.state_dict(), fn)# 'conv_autoencoder.pth')
+
 # Network Parameters
 num_hidden_1 = 1024 #256  # 1st layer num features
 num_hidden_2 = 512 #128  # 2nd layer num features (the latent dim)
@@ -110,6 +121,14 @@ def create_model(args):
         model = Autoencoder()
     elif args.arch=='FC':
         model = AutoencoderFC2(num_input, num_hidden_1, num_hidden_2)
+    elif args.arch=='AE2':
+        encoder = Encoder()
+        decoder = Decoder()
+        model = AutoencoderNet(encoder, decoder)
+    elif args.arch=='CL':
+        encoder = Encoder()
+        classifier = Classifier()
+        model = ClassifyNet(encoder, classifier)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
@@ -197,12 +216,43 @@ def train(args, train_loader):
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
         if (epoch %5 ==0) and (epoch >10):
             print('save model param')
-            torch.save(model.state_dict(), 'conv_autoencoder.pth')
+            model.save_model('conv_autoencoder.pth')
+            #torch.save(model.state_dict(), 'conv_autoencoder.pth')
         #lr_scheduler.step(loss)
         #print('curr lr ', optimizer.state_dict()['param_groups'][0]['lr'])
 
-# Save the model
-    torch.save(model.state_dict(), 'conv_autoencoder.pth')
+#train classifynet
+def train_classifier(args, train_loader):
+    global model
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", patience=12, factor=0.5, min_lr=1e-5
+        )
+    num_epochs = 400
+    for epoch in range(num_epochs):
+        for data in train_loader:
+            img, labels = data
+            img = img.to(device)
+            labels = labels.to(device)
+            #print('train img shape,  ', img.shape)
+            optimizer.zero_grad()
+            #print('train img shape,  ', img.shape)
+            output = model(img)
+            print('output and labels ', output.shape, labels.shape)
+            #print('train img shape, output shape ', img.shape, output.shape)
+            loss = criterion(output, labels)
+            loss.backward()
+            optimizer.step()
+        if epoch % 5== 0:
+            print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
+        if (epoch %5 ==0) and (epoch >10):
+            print('save model param')
+            model.save_model('clsnet')
+            #torch.save(model.state_dict(), 'conv_autoencoder.pth')
+        #lr_scheduler.step(loss)
+        #print('curr lr ', optimizer.state_dict()['param_groups'][0]['lr'])
+
 
 def evaluate(args, test_loader):
     global model, device
@@ -257,6 +307,8 @@ if __name__ == "__main__":
     train_loader, test_loader = create_dataloader(args) #this handle the dataset name and return the correct loader
     if args.mode=="train":
         train(args, train_loader)
+    elif args.mode=="train_cl":
+        train_classifier(args, train_loader)
     else:
         evaluate(args, test_loader)
 
