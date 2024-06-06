@@ -253,7 +253,7 @@ def train_classifier(args, train_loader):
         #lr_scheduler.step(loss)
         #print('curr lr ', optimizer.state_dict()['param_groups'][0]['lr'])
 
-
+#evaluate for autoencoder
 def evaluate(args, test_loader):
     global model, device
     model_path=args.paramfn
@@ -290,10 +290,33 @@ def evaluate(args, test_loader):
         ax[1, i].axis('OFF')
     plt.show()
 
+#evaluate for classifynet
+def evaluate_cl(args, test_loader):
+    global model, device
+    model_path=args.paramfn
+    model.load_state_dict(torch.load(model_path, device))
+    model.eval()
+    model.debug=True
+    with torch.no_grad():
+        for data, label in test_loader:
+            data = data.to(device)
+            pred = model(data)
+            break
+
+    import matplotlib.pyplot as plt
+    plt.figure(dpi=250)
+    fig, ax = plt.subplots(2, 7, figsize=(15, 4))
+    for i in range(7):
+        ax[0, i].imshow(data[i].cpu().numpy().transpose((1, 2, 0)))
+    print(' gt label ', label)
+    print('classify predicted label ', pred)
+    plt.show()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="main script .")
     parser.add_argument("--directory", type=str, default="/media/student/datavision/save_wipe_1-14/save_data_wipe_1-14_01", help="Directory with saved data")
-    parser.add_argument("--mode", type=str, default="train", help="Directory with saved data")
+    parser.add_argument("--mode", type=str, default="train", help="train, eval, train_cl, eval_cl")
     parser.add_argument("--arch", type=str, default="Conv", help="Directory with saved data")
     parser.add_argument("--imwidth", type=int, default=28, help="image width 28 for mnist, 64 for flower")
     parser.add_argument("--cnum", type=int, default=1, help="image channel numb")
@@ -309,6 +332,8 @@ if __name__ == "__main__":
         train(args, train_loader)
     elif args.mode=="train_cl":
         train_classifier(args, train_loader)
+    elif args.mode=="eval_cl":
+        evaluate_cl(args, test_loader)
     else:
         evaluate(args, test_loader)
 
