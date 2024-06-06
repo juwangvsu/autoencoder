@@ -66,7 +66,7 @@ class Office31(data.Dataset):
         self.labeler = preprocessing.LabelEncoder()
         self.data, self.targets = self.load_samples()
 # a data sample  is (filename, class), where class is an integer
-        print('data, target ', self.data[0], self.targets[0])
+        #print('data, target ', self.data[0], self.targets[0])
         self.targets = torch.LongTensor(self.targets)
 
     def __getitem__(self, index):
@@ -88,6 +88,9 @@ class Office31(data.Dataset):
         if self.transform is not None:
             img = self.transform(img)
         label = torch.LongTensor([np.int64(label).item()])
+        label = torch.nn.functional.one_hot(label, num_classes=31).to(torch.float32)
+        label = torch.squeeze(label, 0)
+        #print('label sqz shape ', label.shape)
         
         # label = torch.FloatTensor([label.item()])
         return img, label

@@ -33,6 +33,7 @@ class Classifier(nn.Module):
 
     def forward(self, x):
         x = self.classifier(x)
+        #print('classifier output ', x[0])
         return x
 
 
@@ -93,10 +94,10 @@ class ClassifyNet(nn.Module):
         self.debug=False
     def forward(self, x):
         if self.debug:
-            print('encoder inp shape ', x.shape)
-        x = self.en(x)
+            print('CL encoder inp shape ', x.shape)
+        x = self.en(x).reshape(-1,16384)
         if self.debug:
-            print('encoder output shape ', x.shape)
+            print('CL encoder output shape ', x.shape)
         x = self.cl(x)
         return x
     #save to two files, for en and de, fn is the prefix
@@ -104,7 +105,7 @@ class ClassifyNet(nn.Module):
         fne='encoder_'+fn+'.pth'
         fnd='classifier'+fn+'.pth'
         fnwhole='classifiernet'+fn+'.pth'
-        torch.save(en.state_dict(), fne)# 'conv_autoencoder.pth')
-        torch.save(cl.state_dict(), fnd)# 'conv_autoencoder.pth')
+        torch.save(self.en.state_dict(), fne)# 'conv_autoencoder.pth')
+        torch.save(self.cl.state_dict(), fnd)# 'conv_autoencoder.pth')
         torch.save(self.state_dict(), fnwhole)# 'conv_autoencoder.pth')
 

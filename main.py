@@ -239,7 +239,7 @@ def train_classifier(args, train_loader):
             optimizer.zero_grad()
             #print('train img shape,  ', img.shape)
             output = model(img)
-            print('output and labels ', output.shape, labels.shape)
+            #print('output and labels ', output.shape, labels.shape)
             #print('train img shape, output shape ', img.shape, output.shape)
             loss = criterion(output, labels)
             loss.backward()
