@@ -4,7 +4,7 @@ import torch.optim as optim
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import dataset_office31
-
+import numpy as np
 from en_de_cl import AutoencoderNet, Encoder, Decoder, ClassifyNet, Classifier
 
 import argparse
@@ -174,15 +174,21 @@ def create_dataloader(args):
     print(train_dataset_mn)
     if args.dataset=='flower':
         train_loader=train_loader_fl
+        train_dataset = train_dataset_fl
         test_loader=test_loader_fl
+        test_dataset = test_dataset_fl
     elif args.dataset=='amazon':
         train_loader= train_loader_am
+        train_dataset = train_dataset_am
         test_loader=test_loader_am
+        test_dataset = test_dataset_am
     else:
         train_loader, train_loader_mn
-        test_loader=test_loader_am
+        train_dataset = train_dataset_mn
+        test_loader=test_loader_mn
+        test_dataset = test_dataset_mn
 
-    return train_loader, test_loader
+    return train_loader, test_loader, train_dataset, test_dataset
 
 
 def train(args, train_loader):
@@ -291,7 +297,7 @@ def evaluate(args, test_loader):
     plt.show()
 
 #evaluate for classifynet
-def evaluate_cl(args, test_loader):
+def evaluate_cl(args, test_loader, train_dataset):
     global model, device
     model_path=args.paramfn
     model.load_state_dict(torch.load(model_path, device))
@@ -308,8 +314,13 @@ def evaluate_cl(args, test_loader):
     fig, ax = plt.subplots(2, 7, figsize=(15, 4))
     for i in range(7):
         ax[0, i].imshow(data[i].cpu().numpy().transpose((1, 2, 0)))
-    print(' gt label ', label)
+    print(' gt label ', label) #onehot
+    _, labelind = torch.max(label, 1)
+    print(' gt label ', np.array(train_dataset.classnames)[labelind[:7]])
     print('classify predicted label ', pred)
+    _, predicted = torch.max(pred.data, 1)
+    print('classify predicted index ', predicted)
+    print('classify predicted classname', np.array(train_dataset.classnames)[predicted[:7].cpu()])
     plt.show()
 
 
@@ -327,13 +338,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     create_model(args)
-    train_loader, test_loader = create_dataloader(args) #this handle the dataset name and return the correct loader
+    train_loader, test_loader, train_dataset, test_dataset = create_dataloader(args) #this handle the dataset name and return the correct loader
     if args.mode=="train":
         train(args, train_loader)
     elif args.mode=="train_cl":
         train_classifier(args, train_loader)
     elif args.mode=="eval_cl":
-        evaluate_cl(args, test_loader)
+        evaluate_cl(args, test_loader, train_dataset)
     else:
         evaluate(args, test_loader)
 

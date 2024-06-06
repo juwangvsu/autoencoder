@@ -8,10 +8,12 @@ train AE 2:
 	python3 main.py --mode eval --arch AE2 --dataset amazon --imwidth 64 --cnum 3 --paramfn autoencodernetconv_autoencoder.pth.pth --dsroot /data/office31_new
 
 train classify net:
-python3 main.py --mode train_cl --arch CL --dataset amazon --imwidth 64 --cnum 3 --dsroot /media/student/isaacsim/office31/
+	python3 main.py --mode train_cl --arch CL --dataset amazon --imwidth 64 --cnum 3 --dsroot /media/student/isaacsim/office31/
+	python3 main.py --mode eval_cl --arch CL --dataset amazon --imwidth 64 --cnum 3 --dsroot /data/office31_new --paramfn classifiernetclsnet.pth
 
 status: cl training runs, cros-entropy, 31 classes, start loss 3.31
 	81 epoch loss 0.0005
+	testing...
 
 -----------------------6/4/24 -----------------
 train:

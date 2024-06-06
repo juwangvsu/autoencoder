@@ -39,6 +39,10 @@ class Office31(data.Dataset):
         transform (callable, optional): A function/transform that takes in
             an PIL image and returns a transformed version.
             E.g, ``transforms.RandomCrop``
+
+            self.classnames: list of class name string
+            self.targets : list, each is an index representing the class id of the data item
+            self.data: list of image tensor for data items of the dataset
     """
 
     url = "https://docs.google.com/uc?export=download&id=0B4IapRTv9pJ1WGZVd1VDMmhwdlE"
@@ -155,7 +159,10 @@ class Office31(data.Dataset):
         if len(image_list) == 0:
             raise RuntimeError("Offce31 dataset is empty. Maybe it was not downloaded.")
         labels = [os.path.split(os.path.split(p)[0])[-1] for p in image_list]
+        #print('labels: ', list(dict.fromkeys(labels)))
+        self.classnames = list(dict.fromkeys(labels)) # the order seems alright, but not bank on it.
         labels = self.labeler.fit_transform(labels)
+        #print('labels index: ', torch.unique(torch.tensor(labels)))
         n_total = len(image_list)
         n_test = int(0.1 * n_total)
         indices = np.arange(n_total)
